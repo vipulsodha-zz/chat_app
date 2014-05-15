@@ -18,6 +18,10 @@ else{
 }
 
 });
+String.prototype.replaceAt=function(index, character) {
+    return this.substr(0, index) + character + this.substr(index+character.length);
+}
+
 
  	app.get('/',function(req,res){
 
@@ -35,7 +39,7 @@ app.set('view engine', 'ejs');
 	console.log('Client Joined ...\n');
 
 
-
+var patt = new RegExp(/\W@\w/);
 socket.on('send_message',function(data,callback){
 		msg = data.trim();
 		if(msg.substr(0,1) === '@')
@@ -46,6 +50,7 @@ socket.on('send_message',function(data,callback){
 			ind = msg.indexOf(' ');
 			username = msg.substr(0,ind);
 			username = username.trim();
+			username = username.toLowerCase();
 			msg = msg.substr(ind);
 			if(ind !== -1)
 			{
@@ -69,6 +74,27 @@ socket.on('send_message',function(data,callback){
 
 			}
 		}
+		else if(msg.match(patt))
+		{
+			msg +=" ";
+			var n = msg.search(patt);
+	msg = msg.replaceAt(n+1," ");
+	username = msg.substr(n+2);
+	temp_index = username.indexOf(' ');
+	username= username.substr(0,temp_index);
+	msg = msg.trim();
+	if(username in users)
+				{callback('user found');
+					console.log('User in List');
+					users[username].emit('private_message',{nickname : socket.nickname , message : msg});
+				}
+				else
+				{
+					callback('User not on server');
+					console.log('user not found');
+				}
+
+		}
 		else
 		{
 			
@@ -89,6 +115,8 @@ callback(true);
 
 	socket.on('new_user',function(data,callback){
 		console.log('username : ' + data);
+		data = data.trim();
+		data = data.toLowerCase();
 		if(data in users)
 		{
 			console.log("clallback false");
