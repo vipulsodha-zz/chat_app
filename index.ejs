@@ -1,0 +1,317 @@
+<html>
+<head>
+<title>
+Chat Server
+</title>
+<style type="text/css">
+body{
+	margin: 0px;
+	padding: 0px;
+}
+#chat_box{
+	height: 300px;
+	border: 2px solid #000;
+	width: 500px;
+	overflow: auto;
+}
+#user_list{
+	height: 300px;
+	width: 200px;
+	border: 2px solid #000;
+}
+.float_left{
+	float: left;
+}
+#content_wrap{
+	display: none;
+}
+#error{
+	border: 2px solid #000;
+	height: 30px ; 
+	width: auto;
+
+
+}
+#personal_chat_window
+{
+	float: left;
+	width: 100%;
+	height: 200px;
+	border: 2px solid #000;
+	position: absolute;
+	bottom: 0;
+}
+.personal_chat_box
+{
+	float: right;
+	width: 20%;
+	border: 2px solid #000;
+	height: 200px;
+}
+.chatBoxHeader
+{
+	float: left;
+	width: 100%;
+	height: 20px;
+	cursor: pointer;
+
+}
+.personal_chat_message
+{
+	float: left;
+	width: 100%;
+	height: 50%;
+	border: 2px solid #000;
+	overflow: auto;
+}
+.personal_chat_input
+{
+	float: left;
+	width: 100%;
+}
+.from 
+{
+	float: left;
+	width: 75%;
+	
+	
+	text-align: left;
+	margin: 3px;
+}
+.to
+{
+	text-align: right;
+	margin: 3px;
+	
+
+	float: right;
+	width: 75%;
+	
+	
+}
+.personal_chat_message ul 
+{
+	list-style-type: none;
+
+}
+
+</style>
+<body>
+<h1>
+Welcome to Chat Room
+</h1>
+<div id="div_nickname">
+<p id="nickname_error"></p> 
+	<form id="nickname_form"> 
+	<input type="text" id="input_nickname">
+	<input type="submit" id="submit_nickname">
+
+	</form>	
+</div>
+
+<div id="content_wrap">
+
+	<div  class="float_left"> 
+		<ul id="user_list">
+
+		</ul>
+
+	</div>
+	<div class="left_float">
+		<div id="chat_box">
+
+		</div>
+
+		<form id="chat_form">
+		<input type = "text" id="messagebox">
+		<input type="submit">
+		</form>
+
+	</div>
+	<p id='error'></p>
+</div>
+<div id= "personal_chat_window">
+
+</div>
+
+
+<script type="text/javascript" src= "http://code.jquery.com/jquery-latest.min.js"></script>
+<script type="text/javascript" src="/socket.io/socket.io.js"></script>
+<script type="text/javascript">
+var socket  = io.connect();
+var windows = {};
+
+function personal_chat(data)
+{
+	//personal chat data
+	if(data in windows)
+	{
+		console.log('window already open');
+	}
+	else
+	{
+	$('#personal_chat_window').append('<div class = "personal_chat_box" id= "' + data + '"><div class = "chatBoxHeader" onclick="personal_chat_remove(\''+data+'\')">close ('+data+')</div><div class="personal_chat_message"><ul id = "personal_message_list_'+data+'"></ul></div><form class="personal_chat_form" action = "javascript:personal_chat_form_submit(\''+data+'\')" ><input type ="text" id ="personal_chat_input_'+data+'" name="'+data+'"></form></div>');
+	windows[data] = true;
+	}
+
+}
+
+function personal_chat_form_submit(data)
+{
+	
+	temp = document.getElementById('personal_chat_input_'+data);
+
+
+	
+	
+	$('#personal_message_list_'+temp.name).append('<li class ="to">'+temp.value+'</li>');
+
+	socket.emit('personal_chat' ,{message : temp.value , to : temp.name } , function(data){
+		if(data)
+		{
+			console.log("message dilivered");
+		}
+		else
+		{
+			console.log("message no diliverd");
+
+		}
+
+	});
+	temp.value="";
+	
+}
+
+function personal_chat_remove(data)
+{
+	console.log(data + 'window to be removed') ;
+if(data in windows)
+{
+$('#'+data+'').remove();
+delete windows[data];
+
+}
+
+}
+
+jQuery(function($){
+	
+	var nickname  = $('#input_nickname'),
+	 form_nickname = $('#nickname_form'),
+	 chat_box = $('#chat_box'),
+	 chat_form  = $('#chat_form'),
+	 messagebox = $('#messagebox'),
+	 nickname_error = $('#nickname_error'),
+	chat_form  = $('#content_wrap'),
+	user_list = $('#user_list'),
+	personal_chat_window = $('#personal_chat_window');
+	 error = $('#error');
+
+
+
+
+
+	form_nickname.submit(function(e){
+		e.preventDefault();
+		console.log("subitted");
+			socket.emit('new_user',nickname.val(),function(data){
+				console.log("Got a callback");
+				if(data)
+				{
+					console.log("hello got a true callback ! :)");
+					$('#div_nickname').hide();
+					$('#content_wrap').show();
+
+				}
+				else
+				{
+					
+					console.log("got a false call back");
+					nickname_error.html('username already exists !!! ');
+
+				}
+
+
+			});
+			nickname.val('');
+	
+	});
+
+	
+
+
+	chat_form.submit(function(e){
+
+		e.preventDefault();
+		socket.emit('send_message',messagebox.val(),function(data){
+				//callback
+				error.html(data);
+				console.log(data);
+
+
+		});
+		console.log('chat : ' + messagebox.val());
+		messagebox.val('');
+		
+	});
+
+	//personal chat
+
+
+socket.on('personal_chat',function(data){
+	console.log(data.message +"from : "+ data.from);
+
+	if(!(data.from in windows))
+	{
+		personal_chat(data.from);
+
+	}
+$('#personal_message_list_'+data.from).append('<li class ="from">'+data.message+'</li>');
+
+
+});
+
+
+
+
+//personal chat ends
+
+	
+
+socket.on('user_noti' , function(data){
+		console.log(data.username + ' ' + data.message);
+		chat_box.append('<i>' + data.username + ' ' +  data.message + '</i><br/>');
+	});
+	socket.on('new_message',function(data){
+		
+		data = eval(data);
+		console.log(data);
+		chat_box.append('<b>' + data.nickname + '</b> : ' + data.message + '<br/>');
+	});
+
+	socket.on('private_message',function(data){
+		console.log(data);
+		chat_box.append('<i style="color : red;"><b>' + data.nickname + '</b> : ' + data.message + '</i><br/>');
+
+	});
+
+
+	socket.on('username',function(data){
+		user_list.html('');
+		console.log(data);
+	$.each(data,function(index,value){
+		console.log(index + ' : ' +  value);
+
+		user_list.append('<li><a href="#" onclick = "personal_chat(\''  + value + '\')";> '+ value + '</a>	 </li>');
+	});
+
+	});
+
+
+
+
+});
+</script>
+</body>
+</head>
+</html>

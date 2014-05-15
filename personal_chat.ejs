@@ -1,0 +1,43 @@
+<html>
+<head>
+<title>Personal Chat</title></head>
+<style type="text/css">
+#chat_box{
+
+	float: left;
+	height: 300px;
+	width: 300px;
+	border: 2px solid #000;
+}
+#input_message{
+
+	width: 200px;
+}
+
+
+</style>
+<body>
+
+<h1>Personal Chat with <%= username %></h1>
+
+<div id="chat_box"> </div>
+<form id = "message_form">
+<input type="text" id = "input_message">
+</form>
+<script type="text/javascript" src= "http://code.jquery.com/jquery-latest.min.js"></script>
+<script type="text/javascript" src="/socket.io/socket.io.js"></script>
+<script type="text/javascript">
+document.ready(function(){
+console.log("ready");
+var socket  = io.connect();
+
+
+
+});
+
+
+</script>
+</body>
+
+
+</html>

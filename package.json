@@ -1,0 +1,25 @@
+{
+  "name": "chat",
+  "subdomain": "privatechat",
+  "scripts": {
+    "start": "app.js"
+  },
+  "version": "0.1.0",
+  "engines": {
+    "node": "1"
+  },
+  "dependencies": {
+    "express": "*",
+    "socket.io": "*",
+    "ejs": "*",
+    "mongoose": "*"
+  },
+  "description": "A facebook like chat app",
+  "main": "app.js",
+  "keywords": [
+    "chat",
+    "app"
+  ],
+  "author": "Vipul sodha",
+  "license": "none"
+}
