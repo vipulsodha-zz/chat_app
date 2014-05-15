@@ -18,6 +18,14 @@ else{
 }
 
 });
+var dbSchema = mongoose.Schema({
+	nickname: String,
+	msg : String,
+	created : {type : Date , default: Date.now}
+});
+
+var chatModel = mongoose.model('message',dbSchema);
+
 String.prototype.replaceAt=function(index, character) {
     return this.substr(0, index) + character + this.substr(index+character.length);
 }
@@ -36,6 +44,13 @@ app.set('view engine', 'ejs');
 
 
  io.sockets.on('connection',function(socket){
+ 	chatModel.find({},function(error , data){
+ 		if(error)
+ 			throw error;
+ 		else
+ 			console.log(data);
+
+ 	});
 	console.log('Client Joined ...\n');
 
 
@@ -97,6 +112,14 @@ socket.on('send_message',function(data,callback){
 		}
 		else
 		{
+			var newMessage = new chatModel({msg:msg , nickname : socket.nickname});
+			newMessage.save(function(error){
+				if(error)
+					throw error;
+				else
+					console.log("saved to database");
+
+			});
 			
 		console.log(socket.nickname + " : " + data);
 		io.sockets.emit('new_message',{nickname: socket.nickname , message : msg});
